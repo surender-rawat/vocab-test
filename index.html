@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabulary Test</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
+    .name-form {
+      text-align: center;
+    }
+
+    .name-form input,
+    .name-form select {
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .name-form input:focus,
+    .name-form select:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    .name-form button {
+      padding: 0.75rem 1.5rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .name-form button:hover {
+      background-color: #0056b3;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .test-section {
+      margin-top: 1.5rem;
+    }
+
+    .question {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .question p {
+      margin: 0 0 1rem 0;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .options label {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .options label:hover {
+      background: #f1f1f1;
+      border-color: #ccc;
+    }
+
+    .options input[type="radio"] {
+      margin-right: 0.75rem;
+    }
+
+    .submit-button {
+      display: block;
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .submit-button:hover {
+      background-color: #218838;
+    }
+
+    .results-section {
+      margin-top: 1.5rem;
+    }
+
+    .results-section h2 {
+      color: #333;
+      margin-bottom: 1rem;
+    }
+
+    .results-section p {
+      margin: 0.5rem 0;
+    }
+
+    .wrong-answer {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: #fff3f3;
+      border: 1px solid #ffcccc;
+      border-radius: 5px;
+    }
+
+    .wrong-answer p {
+      margin: 0.5rem 0;
+    }
+
+    .wrong-answer .user-answer {
+      text-decoration: line-through;
+      color: #dc3545;
+    }
+
+    .wrong-answer .correct-answer {
+      font-weight: bold;
+      color: #28a745;
+    }
+
+    /* Mobile-friendly styles */
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .name-form input,
+      .name-form select {
+        font-size: 0.9rem;
+      }
+
+      .name-form button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Name Input Form -->
+    <div id="nameForm" class="name-form">
+      <h1>Welcome to the Vocabulary Test</h1>
+      <input type="text" id="userName" placeholder="Enter your name" required>
+      <select id="testNumber"></select>
+      <button onclick="startTest()">Start Test</button>
+    </div>
+
+    <!-- Test Section (Hidden Initially) -->
+    <div id="testSection" class="test-section hidden">
+      <h1>Vocabulary Test</h1>
+      <div id="test"></div>
+      <button id="submitButton" class="submit-button hidden" onclick="submitTest()">Submit</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <!-- Results Section (Hidden Initially) -->
+    <div id="resultsSection" class="results-section hidden">
+      <h2>Test Results</h2>
+      <p><strong>Test ID:</strong> <span id="testId"></span></p>
+      <p><strong>Score:</strong> <span id="finalScore"></span></p>
+      <h3>Wrong Answers:</h3>
+      <div id="wrongAnswers"></div>
+    </div>
+  </div>
+
+  <script>
+    let allQuestions = []; // Store all questions from the CSV
+    let questions = []; // Store questions for the current test
+    let userAnswers = [];
+    let userName = "";
+    let selectedTestId = ""; // Store the selected Test ID
+    const questionsPerTest = 10; // Number of questions per test
+    let sheetURL, scriptURL; // URLs will be loaded from config.json
+
+    // Fetch configuration from config.json
+    async function fetchConfig() {
+      try {
+        const response = await fetch("config.json");
+        const config = await response.json();
+        sheetURL = config.sheetURL;
+        scriptURL = config.scriptURL;
+        fetchAllData(); // Fetch data after loading config
+      } catch (error) {
+        console.error("Error fetching config:", error);
+      }
+    }
+
+    // Fetch all data from Google Sheets
+    async function fetchAllData() {
+      try {
+        const response = await fetch(sheetURL);
+        const data = await response.text();
+        const rows = data.split("\n").slice(1); // Remove header row
+        allQuestions = rows.map(row => {
+          const [word, correctAnswer, ...options] = row.split(",");
+          return { word, correctAnswer, options };
+        });
+
+        // Generate test options dynamically
+        generateTestOptions();
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    // Generate test options dynamically
+    function generateTestOptions() {
+      const testNumberSelect = document.getElementById("testNumber");
+      const totalTests = Math.ceil(allQuestions.length / questionsPerTest); // Calculate total tests
+
+      // Clear existing options
+      testNumberSelect.innerHTML = "";
+
+      // Add options for each test
+      for (let i = 1; i <= totalTests; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = `Test ${i}`;
+        testNumberSelect.appendChild(option);
+      }
+    }
+
+    // Start the test
+    function startTest() {
+      userName = document.getElementById("userName").value.trim();
+      const testNumber = document.getElementById("testNumber").value;
+      selectedTestId = `Test ${testNumber}`; // Set the selected Test ID
+
+      if (!userName) {
+        alert("Please enter your name!");
+        return;
+      }
+
+      // Hide the name form and show the test section
+      document.getElementById("nameForm").classList.add("hidden");
+      document.getElementById("testSection").classList.remove("hidden");
+
+      // Load the selected test
+      loadTest();
+    }
+
+    // Load the selected test
+    function loadTest() {
+      const testNumber = document.getElementById("testNumber").value;
+      const startIndex = (testNumber - 1) * questionsPerTest; // Calculate the starting index
+      questions = allQuestions.slice(startIndex, startIndex + questionsPerTest); // Get questions for the test
+      renderTest();
+
+      // Show the Submit button
+      document.getElementById("submitButton").classList.remove("hidden");
+    }
+
+    // Render the test
+    function renderTest() {
+      const testDiv = document.getElementById("test");
+      testDiv.innerHTML = questions.map((q, index) => `
+        <div class="question">
+          <p><strong>${index + 1}. ${q.word}</strong></p>
+          <div class="options">
+            ${q.options.map((opt, i) => `
+              <label>
+                <input type="radio" name="q${index}" value="${opt.trim()}">
+                ${opt.trim()}
+              </label>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Submit the test
+    async function submitTest() {
+      userAnswers = [];
+      const wrongWords = []; // Array to store wrong words
+
+      questions.forEach((q, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        userAnswers.push(selected ? selected.value : null);
+
+        // Check if the answer is wrong
+        if (selected && selected.value !== q.correctAnswer.trim()) {
+          wrongWords.push({ word: q.word, correctAnswer: q.correctAnswer, userAnswer: selected.value });
+        }
+      });
+
+      const score = calculateScore();
+      document.getElementById("score").innerHTML = `Your score: ${score} / ${questions.length}`;
+
+      // Send data to Google Apps Script
+      const data = { name: userName, score, wrongWords, testId: selectedTestId };
+      await saveScore(data);
+
+      // Display the results page
+      showResults(selectedTestId, score, wrongWords);
+    }
+
+    // Calculate the score
+    function calculateScore() {
+      return questions.reduce((acc, q, index) => {
+        return acc + (userAnswers[index] === q.correctAnswer.trim() ? 1 : 0);
+      }, 0);
+    }
+
+    // Show the results page
+    function showResults(testId, score, wrongWords) {
+      // Hide the test section
+      document.getElementById("testSection").classList.add("hidden");
+
+      // Show the results section
+      const resultsSection = document.getElementById("resultsSection");
+      resultsSection.classList.remove("hidden");
+
+      // Display Test ID and Score
+      document.getElementById("testId").textContent = testId;
+      document.getElementById("finalScore").textContent = `${score} / ${questions.length}`;
+
+      // Display wrong answers
+      const wrongAnswersDiv = document.getElementById("wrongAnswers");
+      wrongAnswersDiv.innerHTML = wrongWords.map(w => `
+        <div class="wrong-answer">
+          <p><strong>Word:</strong> ${w.word}</p>
+          <p><strong>Your Answer:</strong> <span class="user-answer">${w.userAnswer}</span></p>
+          <p><strong>Correct Answer:</strong> <span class="correct-answer">${w.correctAnswer}</span></p>
+        </div>
+      `).join("");
+    }
+
+    // Save the score and wrong words to Google Sheets
+    async function saveScore(data) {
+      try {
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        const result = await response.text();
+        console.log("Response from Google Apps Script:", result); // Log the response
+      } catch (error) {
+        console.error("Error saving score:", error);
+      }
+    }
+
+    // Load config when the page loads
+    fetchConfig();
+  </script>
+</body>
+</html>
