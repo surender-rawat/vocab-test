@@ -237,7 +237,7 @@
         scriptURL = config.scriptURL;
         fetchAllData(); // Fetch data after loading config
       } catch (error) {
-        console.error("Error fetching config file:", error);
+        console.error("Error fetching config:", error);
       }
     }
 
@@ -248,8 +248,8 @@
         const data = await response.text();
         const rows = data.split("\n").slice(1); // Remove header row
         allQuestions = rows.map(row => {
-          const [word, correctAnswer, ...options] = row.split(",");
-          return { word, correctAnswer, options };
+          const [word, correctAnswer,sentence, ...options] = row.split(",");
+          return { word, correctAnswer,sentence, options };
         });
 
         // Generate test options dynamically
@@ -307,22 +307,25 @@
     }
 
     // Render the test
-    function renderTest() {
-      const testDiv = document.getElementById("test");
-      testDiv.innerHTML = questions.map((q, index) => `
-        <div class="question">
-          <p><strong>${index + 1}. ${q.word}</strong></p>
-          <div class="options">
-            ${q.options.map((opt, i) => `
-              <label>
-                <input type="radio" name="q${index}" value="${opt.trim()}">
-                ${opt.trim()}
-              </label>
-            `).join("")}
-          </div>
-        </div>
-      `).join("");
-    }
+  function renderTest() {
+  const testDiv = document.getElementById("test");
+  console.log(JSON.stringify(questions))
+  testDiv.innerHTML = questions.map((q, index) => `
+    <div class="question">
+      <p><strong>${index + 1}. ${q.word}</strong></p>
+      <p class="help-text"><em>${q.sentence}</em></p>
+      <div class="options">
+        ${q.options.slice(0, 4).map((opt, i) => `
+          <label>
+            <input type="radio" name="q${index}" value="${opt.trim()}">
+            ${opt.trim()}
+          </label>
+        `).join("")}
+      </div>
+  
+    </div>
+  `).join("");
+}
 
     // Submit the test
     async function submitTest() {
@@ -335,7 +338,7 @@
 
         // Check if the answer is wrong
         if (selected && selected.value !== q.correctAnswer.trim()) {
-          wrongWords.push({ word: q.word, correctAnswer: q.correctAnswer, userAnswer: selected.value });
+          wrongWords.push({ word: q.word, correctAnswer: q.correctAnswer, userAnswer: selected.value, sentence: q.sentence });
         }
       });
 
@@ -377,6 +380,7 @@
           <p><strong>Word:</strong> ${w.word}</p>
           <p><strong>Your Answer:</strong> <span class="user-answer">${w.userAnswer}</span></p>
           <p><strong>Correct Answer:</strong> <span class="correct-answer">${w.correctAnswer}</span></p>
+          <p><strong>Sentence:</strong> <span class="correct-answer">${w.sentence}</span></p>
         </div>
       `).join("");
     }
