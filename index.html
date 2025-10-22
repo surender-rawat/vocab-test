@@ -264,6 +264,72 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
 }
 
+.card-form {
+  background: #ffffff; /* solid white card */
+  border-radius: 15px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  margin: 2rem auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* soft shadow */
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Hover effect for slight lift */
+.card-form:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Heading */
+.card-form h1 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+/* Input and select */
+.card-form input,
+.card-form select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Focus style */
+.card-form input:focus,
+.card-form select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+/* Button */
+.card-form button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #43cea2, #185a9d);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.2s;
+}
+
+/* Button hover */
+.card-form button:hover {
+  background: linear-gradient(135deg, #185a9d, #43cea2);
+  transform: translateY(-2px);
+}
+
     /* Mobile-friendly styles */
     @media (max-width: 600px) {
       .container {
@@ -289,12 +355,12 @@
 <!-- Page Version v1.1 -->
   <div class="container">
     <!-- Name Input Form -->
-    <div id="nameForm" class="name-form">
-      <h1>Welcome to the Vocabulary Test</h1>
-      <input type="text" id="userName" placeholder="Enter your name" required>
-      <select id="testNumber"></select>
-      <button onclick="startTest()">Start Test</button>
-    </div>
+   <div id="nameForm" class="name-form card-form">
+  		<h1>Vocabulary Test</h1>
+  		<input type="text" id="userName" placeholder="Enter your name" required>
+  		<select id="testNumber"></select>
+  		<button onclick="startTest()">Start Test</button>
+	</div>
 
     <!-- Test Section (Hidden Initially) -->
     <div id="testSection" class="test-section hidden">
