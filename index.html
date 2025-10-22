@@ -169,6 +169,100 @@
       font-weight: bold;
       color: #28a745;
     }
+    
+  .help-word-card {
+  border: 1px solid #ccc;
+  border-left: 5px solid #007bff; /* colored accent */
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 12px;
+  background-color: #f5f8ff; /* soft blue background */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.help-word-card:hover {
+  transform: translateY(-2px);
+}
+
+.help-word-card p {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.help-word-card p strong {
+  font-size: 1.1em;
+  color: #003366;
+}
+
+.help-word-card p em {
+  font-style: normal;
+  color: #555;
+}
+
+.help-word-card .meaning {
+  background-color: #e6f0ff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.help-word-card .sentence {
+  background-color: #fff3e6;
+  padding: 6px 10px;
+  border-radius: 4px;
+  display: block;
+  font-style: italic;
+  color: #444;
+}
+
+.motivation-message {
+  background: linear-gradient(135deg, #ff7e5f, #feb47b); /* warm vibrant gradient */
+  color: #fff;
+  font-size: 1.4em;
+  font-weight: 700;
+  padding: 18px 25px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  margin-bottom: 25px;
+  position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Hover effect for interactivity */
+.motivation-message:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Add icon before text */
+.motivation-message::before {
+  content: "🎉";
+  margin-right: 12px;
+  font-size: 1.3em;
+  vertical-align: middle;
+}
+
+.result-card {
+  background: linear-gradient(135deg, #43cea2, #185a9d); /* nice blue-green gradient */
+  color: #fff;
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  margin: 10px 0;
+  font-size: 1.2em;
+  font-weight: 600;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  text-align: center;
+}
+
+.result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+}
 
     /* Mobile-friendly styles */
     @media (max-width: 600px) {
@@ -192,7 +286,7 @@
   </style>
 </head>
 <body>
-  <!-- Page Version v1.2 -->
+<!-- Page Version v1.1 -->
   <div class="container">
     <!-- Name Input Form -->
     <div id="nameForm" class="name-form">
@@ -212,11 +306,24 @@
 
     <!-- Results Section (Hidden Initially) -->
     <div id="resultsSection" class="results-section hidden">
+      <!-- 🏆 Motivational Message Section -->
+  		<div id="motivationMessage" class="motivation-message" tabindex="-1" style="margin-bottom: 15px; font-size: 1.2em; font-weight: bold; color: #007bff;"></div>
+
       <h2>Test Results</h2>
-      <p><strong>Test ID:</strong> <span id="testId"></span></p>
-      <p><strong>Score:</strong> <span id="finalScore"></span></p>
+      <!-- Test ID Card -->
+  	<div class="result-card" id="testIdCard">
+    	<p><strong>Test ID:</strong> <span id="testId"></span></p>
+  	</div>
+
+  	<!-- Score Card -->
+  	<div class="result-card" id="scoreCard">
+    	<p><strong>Score:</strong> <span id="finalScore"></span></p>
+  	</div>
       <h3>Wrong Answers:</h3>
       <div id="wrongAnswers"></div>
+       <!-- 🆕 Help Words Used Section -->
+    	<h3>Help Words Used:</h3>
+    	<div id="helpWordsSection"></div>
     </div>
   </div>
 
@@ -228,6 +335,7 @@
     let selectedTestId = ""; // Store the selected Test ID
     const questionsPerTest = 10; // Number of questions per test
     let sheetURL, scriptURL; // URLs will be loaded from config.json
+    const helpClickedWords = new Set();
 
     // Fetch configuration from config.json
     async function fetchConfig() {
@@ -238,7 +346,7 @@
         scriptURL = config.scriptURL;
         fetchAllData(); // Fetch data after loading config
       } catch (error) {
-        console.error("Error fetching configuration :", error);
+        console.error("Error fetching config:", error);
       }
     }
 
@@ -250,7 +358,7 @@
         const rows = data.split("\n").slice(1); // Remove header row
         allQuestions = rows.map(row => {
           const [word, correctAnswer,sentence, ...options] = row.split(",");
-          return { word, correctAnswer,sentence, options };
+          return { word, correctAnswer, sentence, options };
         });
 
         // Generate test options dynamically
@@ -310,11 +418,16 @@
     // Render the test
   function renderTest() {
   const testDiv = document.getElementById("test");
-  console.log(JSON.stringify(questions))
+
   testDiv.innerHTML = questions.map((q, index) => `
     <div class="question">
-      <p><strong>${index + 1}. ${q.word}</strong></p>
-      <p class="help-text"><em>${q.sentence}</em></p>
+      <p>
+        <strong>${index + 1}. ${q.word}</strong>
+        <span class="help-icon" id="help-${index}" style="cursor: pointer; color: #007bff; margin-left: 8px;">&#9432;</span>
+      </p>
+      <p class="help-text" id="help-text-${index}" style="display: none; color: #555;">
+        <em>${q.sentence}</em>
+      </p>
       <div class="options">
         ${q.options.slice(0, 4).map((opt, i) => `
           <label>
@@ -323,19 +436,42 @@
           </label>
         `).join("")}
       </div>
-  
     </div>
   `).join("");
+
+  // Add click listeners for help icons
+  questions.forEach((q, index) => {
+    const helpIcon = document.getElementById(`help-${index}`);
+    const helpText = document.getElementById(`help-text-${index}`);
+
+    helpIcon.addEventListener("click", () => {
+      const isVisible = helpText.style.display === "block";
+      helpText.style.display = isVisible ? "none" : "block";
+      
+      if (!isVisible) {
+    	helpClickedWords.add(q.word); // store word when help is shown
+  	}
+
+      console.log(`Help clicked for ${q.word} question ${index + 1}: ${isVisible ? "hidden" : "shown"}`);
+      // You can replace the above console.log with your tracking logic if needed
+    });
+  });
 }
 
     // Submit the test
     async function submitTest() {
       userAnswers = [];
       const wrongWords = []; // Array to store wrong words
-
+	  const helpUsed = [];
+	  
       questions.forEach((q, index) => {
         const selected = document.querySelector(`input[name="q${index}"]:checked`);
         userAnswers.push(selected ? selected.value : null);
+        
+        // Check if help was used for this word
+    	if (helpClickedWords.has(q.word)) {
+      		helpUsed.push(q.word);
+    	}
 
         // Check if the answer is wrong
         if (selected && selected.value !== q.correctAnswer.trim()) {
@@ -347,11 +483,12 @@
       document.getElementById("score").innerHTML = `Your score: ${score} / ${questions.length}`;
 
       // Send data to Google Apps Script
-      const data = { name: userName, score, wrongWords, testId: selectedTestId };
+      const data = { name: userName, score, wrongWords,helpUsed, testId: selectedTestId };
+      console.log("data submitted "+ helpUsed)
       await saveScore(data);
 
       // Display the results page
-      showResults(selectedTestId, score, wrongWords);
+      showResults(selectedTestId, score, wrongWords,helpUsed,userName);
     }
 
     // Calculate the score
@@ -362,13 +499,12 @@
     }
 
     // Show the results page
-    function showResults(testId, score, wrongWords) {
+    function showResults(testId, score, wrongWords,helpUsed,userName) {
       // Hide the test section
       document.getElementById("testSection").classList.add("hidden");
+      // Display motivational message at the top of the results
+	 document.getElementById("motivationMessage").innerHTML = getMotivationalMessage(score,userName);
 
-      // Show the results section
-      const resultsSection = document.getElementById("resultsSection");
-      resultsSection.classList.remove("hidden");
 
       // Display Test ID and Score
       document.getElementById("testId").textContent = testId;
@@ -384,7 +520,82 @@
           <p><strong>Sentence:</strong> <span class="correct-answer">${w.sentence}</span></p>
         </div>
       `).join("");
+      
+      const helpSection = document.getElementById("helpWordsSection");
+
+  	  	if (helpUsed.length === 0) {
+           	helpSection.innerHTML = "<p>No help was used during this test.</p>";
+           	return;
+  	  	}
+  	   	const helpContent = helpUsed.map(word => {
+    	const q = questions.find(q => q.word === word);
+    	return `
+     	 <div class="help-word-card">
+        	<p><strong>${q.word}</strong></p>
+        	<p><em>Meaning:</em> ${q.correctAnswer}</p>
+        	<p><em>Sentence:</em> ${q.sentence}</p>
+      	</div>
+    	`;
+  			}).join("");
+
+  		helpSection.innerHTML = helpContent;
+  		 // Show the results section
+  		const resultsSection = document.getElementById("resultsSection");
+  		resultsSection.classList.remove("hidden");
+
+  		// **Scroll into view smoothly**
+  		resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  			// Optional: focus for accessibility
+  		resultsSection.setAttribute("motivationMessage", "-1"); // Make it focusable
+  		resultsSection.focus();
     }
+    
+    
+function getMotivationalMessage(score, userName) {
+  	let messages = [];
+
+  if (score === 10) {
+    messages = [
+      `Outstanding, ${userName}! You nailed every question — a perfect score! 🌟`,
+      `Flawless victory, ${userName}! You’re a true vocabulary master! 🏆`,
+      `Incredible work, ${userName}! 10 out of 10 — pure excellence! 💫`,
+      `Perfect score, ${userName}! Your hard work is shining through! ✨`
+    ];
+  } else if (score >= 8) {
+    messages = [
+      `Great job, ${userName}! You’re just a step away from perfection! 💪`,
+      `Awesome performance, ${userName}! You clearly know your stuff! 🌟`,
+      `Well done, ${userName}! That’s an excellent score — keep it up! 🎯`,
+      `Fantastic work, ${userName}! Just a little more practice and you’ll be unstoppable! 🚀`
+    ];
+  } else if (score >= 5) {
+    messages = [
+      `Good effort, ${userName}! You’re improving steadily — keep practicing! 👍`,
+      `Nice work, ${userName}! You’re halfway there — consistency is key! 🌱`,
+      `Well tried, ${userName}! Keep learning and you’ll reach the top soon! 💫`,
+      `Solid attempt, ${userName}! Keep building your vocabulary brick by brick! 🧱`
+    ];
+  } else if (score >= 3) {
+    messages = [
+      `Don’t worry, ${userName}! Every mistake is a chance to learn something new. 🌈`,
+      `Keep going, ${userName}! You’re learning and that’s what truly matters! 🌱`,
+      `You’re on the right path, ${userName}! A bit more practice will make a big difference! 💪`,
+      `Stay positive, ${userName}! Learning takes time — you’ve got this! 🌟`
+    ];
+  } else {
+    messages = [
+      `Keep trying, ${userName}! Great achievements start with small steps. 🚀`,
+      `Don’t give up, ${userName}! Every expert was once a beginner. 🌱`,
+      `Believe in yourself, ${userName}! You can improve with every test. 💫`,
+      `Keep pushing, ${userName}! Next time will definitely be better! 💪`
+    ];
+  }
+
+  // Pick a random message from the selected category
+  const randomIndex = Math.floor(Math.random() * messages.length);
+  return messages[randomIndex];
+}
 
     // Save the score and wrong words to Google Sheets
     async function saveScore(data) {
