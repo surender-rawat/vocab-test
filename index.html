@@ -330,6 +330,14 @@
   transform: translateY(-2px);
 }
 
+
+
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 80%; }
+  100% { width: 0%; }
+}
+
     /* Mobile-friendly styles */
     @media (max-width: 600px) {
       .container {
@@ -352,8 +360,10 @@
   </style>
 </head>
 <body>
+
 <!-- Page Version v1.1 -->
   <div class="container">
+  
     <!-- Name Input Form -->
    <div id="nameForm" class="name-form card-form">
   		<h1>Vocabulary Test</h1>
@@ -392,6 +402,7 @@
     	<div id="helpWordsSection"></div>
     </div>
   </div>
+
 
   <script>
     let allQuestions = []; // Store all questions from the CSV
@@ -526,6 +537,8 @@
 
     // Submit the test
     async function submitTest() {
+    
+
       userAnswers = [];
       const wrongWords = []; // Array to store wrong words
 	  const helpUsed = [];
@@ -546,12 +559,19 @@
       });
 
       const score = calculateScore();
-      document.getElementById("score").innerHTML = `Your score: ${score} / ${questions.length}`;
+      //document.getElementById("score").innerHTML = `Your score: ${score} / ${questions.length}`;
 
       // Send data to Google Apps Script
       const data = { name: userName, score, wrongWords,helpUsed, testId: selectedTestId };
-      console.log("data submitted "+ helpUsed)
-      await saveScore(data);
+      try {
+    		await saveScore(data);
+  		} catch (err) {
+    	console.error("Error saving score:", err);
+    	alert("There was an issue submitting your test. Please try again.");
+  	} finally {
+    		// Hide loader once done
+    		//document.getElementById("loader").classList.add("progress-bar-hidden");
+  		}
 
       // Display the results page
       showResults(selectedTestId, score, wrongWords,helpUsed,userName);
@@ -684,5 +704,6 @@ function getMotivationalMessage(score, userName) {
     // Load config when the page loads
     fetchConfig();
   </script>
+
 </body>
 </html>
