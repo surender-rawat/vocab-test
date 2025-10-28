@@ -16,6 +16,39 @@
       align-items: center;
       min-height: 100vh;
     }
+    
+    .button-group {
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  gap: 12px; /* space between buttons */
+  margin-top: 1rem;
+}
+
+.button-group button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+/* Differentiate buttons visually */
+.button-group button:first-child {
+  background: linear-gradient(135deg, #43cea2, #185a9d); /* green-blue */
+}
+
+.button-group button:last-child {
+  background: linear-gradient(135deg, #ff9966, #ff5e62); /* orange-red */
+}
+
+.button-group button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
 
     .container {
       background: white;
@@ -364,13 +397,24 @@
 <!-- Page Version v1.1 -->
   <div class="container">
   
-    <!-- Name Input Form -->
-   <div id="nameForm" class="name-form card-form">
-  		<h1>Vocabulary Test</h1>
-  		<input type="text" id="userName" placeholder="Enter your name" required>
-  		<select id="testNumber"></select>
-  		<button onclick="startTest()">Start Test</button>
-	</div>
+  	<!-- 🆕 Mode Selection (New Section) -->
+  <div id="modeSelect" class="card-form">
+  <h1>Vocabulary Test</h1>
+  <p>Please select how you’d like to begin:</p>
+
+  <div class="button-group">
+    <button onclick="selectMode('normal')">🧠 Start New Test</button>
+    <button onclick="selectMode('revision')">🔁 Revise Wrong Words</button>
+  </div>
+</div>
+  
+	<!-- 🧍 Name Input Form -->
+  <div id="nameForm" class="name-form card-form hidden">
+    <h1 id="formTitle">Vocabulary Test</h1>
+    <input type="text" id="userName" placeholder="Enter your name" required>
+    <select id="testNumber"></select>
+    <button onclick="startTest()">Start Test</button>
+  </div>
 
     <!-- Test Section (Hidden Initially) -->
     <div id="testSection" class="test-section hidden">
@@ -410,9 +454,30 @@
     let userAnswers = [];
     let userName = "";
     let selectedTestId = ""; // Store the selected Test ID
+    let selectedMode = "normal"; 
     const questionsPerTest = 10; // Number of questions per test
-    let sheetURL, scriptURL; // URLs will be loaded from config.json
+    let sheetURL, scriptURL, failedWordSheetURL; // URLs will be loaded from config.json
     const helpClickedWords = new Set();
+    
+    
+    // 🆕 Select Mode (normal/revision)
+  function selectMode(mode) {
+    selectedMode = mode;
+    document.getElementById("modeSelect").classList.add("hidden");
+
+    // In revision mode, skip test selection
+    if (mode === "revision") {
+      document.getElementById("formTitle").textContent = "Revision Mode";
+      fetchAllDataForRevision()
+    }
+    else{
+    document.getElementById("formTitle").textContent = "Vocabulary Test";
+    fetchAllData(); // Fetch data after loading config
+    }
+
+    document.getElementById("nameForm").classList.remove("hidden");
+    document.getElementById("testNumber").classList.remove("hidden");
+  }
 
     // Fetch configuration from config.json
     async function fetchConfig() {
@@ -421,15 +486,36 @@
         const config = await response.json();
         sheetURL = config.sheetURL;
         scriptURL = config.scriptURL;
-        fetchAllData(); // Fetch data after loading config
+        failedWordSheetURL = config.failedSheetURL;
+        
       } catch (error) {
         console.error("Error fetching config:", error);
+      }
+    }
+    
+    
+     async function fetchAllDataForRevision() {
+      try {
+
+        const response = await fetch(failedWordSheetURL);
+        const data = await response.text();
+        const rows = data.split("\n").slice(1); // Remove header row
+        allQuestions = rows.map(row => {
+          const [type,word, correctAnswer,sentence, ...options] = row.split(",");
+          return { type,word, correctAnswer, sentence, options };
+        });
+
+        // Generate test options dynamically
+        generateTestOptions("revision");
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
     }
 
     // Fetch all data from Google Sheets
     async function fetchAllData() {
       try {
+      	console.log("accessing url "+ sheetURL);
         const response = await fetch(sheetURL);
         const data = await response.text();
         const rows = data.split("\n").slice(1); // Remove header row
@@ -439,14 +525,14 @@
         });
 
         // Generate test options dynamically
-        generateTestOptions();
+        generateTestOptions("normal");
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     }
 
     // Generate test options dynamically
-    function generateTestOptions() {
+    function generateTestOptions(mode) {
       const testNumberSelect = document.getElementById("testNumber");
       const totalTests = Math.ceil(allQuestions.length / questionsPerTest); // Calculate total tests
 
@@ -457,7 +543,12 @@
       for (let i = 1; i <= totalTests; i++) {
         const option = document.createElement("option");
         option.value = i;
-        option.textContent = `Test ${i}`;
+        
+        if(mode == "revision"){
+        option.textContent = `RevisionTest ${i}`;
+        }else{
+         option.textContent = `Test ${i}`;
+        }
         testNumberSelect.appendChild(option);
       }
     }
@@ -466,7 +557,12 @@
     function startTest() {
       userName = document.getElementById("userName").value.trim();
       const testNumber = document.getElementById("testNumber").value;
-      selectedTestId = `Test ${testNumber}`; // Set the selected Test ID
+      if(selectedMode == "revision"){
+      selectedTestId = `RevisionTest ${testNumber}`; // Set the selected Test ID
+      }else{
+       selectedTestId = `Test ${testNumber}`; // Set the selected Test ID
+      }
+     
 
       if (!userName) {
         alert("Please enter your name!");
@@ -522,6 +618,12 @@
     const helpText = document.getElementById(`help-text-${index}`);
 
     helpIcon.addEventListener("click", () => {
+    
+      if(selectedMode == "revision"){
+      
+      alert("Don't try to be over smart. This time you are not allowed to see help text.")
+      
+      }else{
       const isVisible = helpText.style.display === "block";
       helpText.style.display = isVisible ? "none" : "block";
       
@@ -531,6 +633,8 @@
 
       console.log(`Help clicked for ${q.word} question ${index + 1}: ${isVisible ? "hidden" : "shown"}`);
       // You can replace the above console.log with your tracking logic if needed
+      }
+      
     });
   });
 }
