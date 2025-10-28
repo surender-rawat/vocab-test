@@ -1,4 +1,5 @@
 {
 	"sheetURL" : "https://docs.google.com/spreadsheets/d/e/2PACX-1vSup5EXRg7dVMmCb5LiItEeex8dedD7pZvwWTg7fBux8NJKn6o6vexWH5PTSXuI2vLEX_2qXm2-bLc6/pub?gid=1675532515&single=true&output=csv",
+	"failedSheetURL": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSup5EXRg7dVMmCb5LiItEeex8dedD7pZvwWTg7fBux8NJKn6o6vexWH5PTSXuI2vLEX_2qXm2-bLc6/pub?gid=637187339&single=true&output=csv",
 	"scriptURL" : "https://script.google.com/macros/s/AKfycbyPiWIOARBiyOk5kXPYMGmNCV7JprJTogiXJrSFJU9jfA4xG4DTUiIRQCHXuI9-DTQQ9Q/exec"
 }
