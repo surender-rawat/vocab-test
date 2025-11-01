@@ -690,15 +690,16 @@
 
     // Show the results page
     function showResults(testId, score, wrongWords,helpUsed,userName) {
+    const resultsSection = document.getElementById("resultsSection");
       // Hide the test section
       document.getElementById("testSection").classList.add("hidden");
       // Display motivational message at the top of the results
 	 document.getElementById("motivationMessage").innerHTML = getMotivationalMessage(score,userName);
 
-
       // Display Test ID and Score
       document.getElementById("testId").textContent = testId;
       document.getElementById("finalScore").textContent = `${score} / ${questions.length}`;
+      
 
       // Display wrong answers
       const wrongAnswersDiv = document.getElementById("wrongAnswers");
@@ -713,10 +714,10 @@
       
       const helpSection = document.getElementById("helpWordsSection");
 
-  	  	if (helpUsed.length === 0) {
+  	  	if (helpUsed == null || helpUsed.length === 0) {
            	helpSection.innerHTML = "<p>No help was used during this test.</p>";
-           	return;
   	  	}
+  	  
   	   	const helpContent = helpUsed.map(word => {
     	const q = questions.find(q => q.word === word);
     	return `
@@ -727,17 +728,19 @@
       	</div>
     	`;
   			}).join("");
+  			
+  			
 
   		helpSection.innerHTML = helpContent;
   		 // Show the results section
-  		const resultsSection = document.getElementById("resultsSection");
-  		resultsSection.classList.remove("hidden");
+  		
+		resultsSection.classList.remove("hidden");
 
   		// **Scroll into view smoothly**
   		resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
 
   			// Optional: focus for accessibility
-  		resultsSection.setAttribute("motivationMessage", "-1"); // Make it focusable
+  		//resultsSection.setAttribute("motivationMessage", "-1"); // Make it focusable
   		resultsSection.focus();
     }
     
