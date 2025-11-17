@@ -165,7 +165,7 @@
         <em>${q.sentence}</em>
       </p>
       <div class="options">
-        ${q.options.slice(0, 4).map((opt, i) => `
+        ${q.options.slice(0, 4).sort(() => Math.random() - 0.5).map((opt, i) => `
           <label>
             <input type="radio" name="q${index}" value="${opt.trim()}">
             ${opt.trim()}
